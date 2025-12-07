@@ -1,218 +1,567 @@
-// Sample prototype data. Remplace par ton backend plus tard.
-const data = [
-  {
-    id: "m01",
-    title: "Kaze no Yoru",
-    type: "Animé",
-    categories: ["Action","Aventure"],
-    description: "Un jeune héros découvre le pouvoir du vent et part sauver son village.",
-    poster: "https://picsum.photos/seed/kaze/800/1200",
-    trailer: "https://www.youtube.com/embed/dQw4w9WgXcQ", // remplacer si besoin
-    platforms: [
-      {name:"CrunchyStream", url:"#", icon:"stream"},
-      {name:"MangaPlay", url:"#", icon:"book"}
-    ]
-  },
-  {
-    id: "m02",
-    title: "Sakura Moon",
-    type: "Manga",
-    categories: ["Drame","Romance"],
-    description: "Une histoire d'amour au fil des saisons et des cerisiers.",
-    poster: "https://picsum.photos/seed/sakura/800/1200",
-    trailer: "",
-    platforms: [
-      {name:"MangaNet", url:"#", icon:"book"}
-    ]
-  },
-  {
-    id: "m03",
-    title: "Mecha Titans",
-    type: "Animé",
-    categories: ["Mecha","Science-Fiction"],
-    description: "Pilotes et robots géants dans une lutte pour la survie de la Terre.",
-    poster: "https://picsum.photos/seed/mecha/800/1200",
-    trailer: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    platforms: [
-      {name:"StreamX", url:"#", icon:"stream"},
-      {name:"RentIt", url:"#", icon:"store"}
-    ]
-  }
-];
+// Variables globales
+let currentFilter = 'all';
+let currentCategory = 'all';
+let searchQuery = '';
+let favorites = JSON.parse(localStorage.getItem('mangaAnimeFavorites')) || [];
+let bookmarks = JSON.parse(localStorage.getItem('mangaAnimeBookmarks')) || {};
+let filteredData = [...mangaAnimeData];
 
-// LocalStorage keys
-const LS_FAV = "otakuhub_favs_v1";
-const LS_MARK = "otakuhub_mark_v1";
+// Initialisation du site
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser les événements
+    initEventListeners();
+    
+    // Afficher tous les éléments au démarrage
+    renderItems(mangaAnimeData);
+    
+    // Initialiser les données utilisateur
+    initUserData();
+});
 
-let favs = new Set(JSON.parse(localStorage.getItem(LS_FAV) || "[]"));
-let marks = JSON.parse(localStorage.getItem(LS_MARK) || "{}"); // {id: {episode:"S1E4"}}
-
-const catalogEl = document.getElementById("catalog");
-const searchEl = document.getElementById("search");
-const categoryFilter = document.getElementById("categoryFilter");
-const markedOnlyBtn = document.getElementById("markedOnlyBtn");
-const modal = document.getElementById("detailModal");
-const detailBody = document.getElementById("detailBody");
-const closeModal = document.getElementById("closeModal");
-
-let showMarkedOnly = false;
-
-// Init categories dropdown
-function initCategories(){
-  const cats = new Set();
-  data.forEach(d => d.categories.forEach(c => cats.add(c)));
-  Array.from(cats).sort().forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c; opt.textContent = c;
-    categoryFilter.appendChild(opt);
-  });
+// Initialiser les événements
+function initEventListeners() {
+    // Navigation
+    const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filter = this.getAttribute('data-filter') || 'all';
+            handleNavFilter(filter);
+            
+            // Mettre à jour l'état actif
+            navLinks.forEach(l => l.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Fermer le menu mobile s'il est ouvert
+            document.querySelector('.mobile-nav').style.display = 'none';
+        });
+    });
+    
+    // Boutons favoris et marque-pages
+    document.getElementById('favorites-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        showFavorites();
+    });
+    
+    document.getElementById('bookmarks-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        showBookmarks();
+    });
+    
+    // Boutons mobiles
+    document.getElementById('mobile-favorites-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        showFavorites();
+        document.querySelector('.mobile-nav').style.display = 'none';
+    });
+    
+    document.getElementById('mobile-bookmarks-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        showBookmarks();
+        document.querySelector('.mobile-nav').style.display = 'none';
+    });
+    
+    // Filtres par catégorie
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            handleCategoryFilter(category);
+            
+            // Mettre à jour l'état actif
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Recherche
+    document.getElementById('search-btn').addEventListener('click', performSearch);
+    document.getElementById('search-input').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+            performSearch();
+        }
+    });
+    
+    // Menu mobile
+    document.querySelector('.mobile-menu-btn').addEventListener('click', function() {
+        const mobileNav = document.querySelector('.mobile-nav');
+        mobileNav.style.display = mobileNav.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Fermer les modales
+    document.querySelectorAll('.close-modal').forEach(closeBtn => {
+        closeBtn.addEventListener('click', function() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        });
+    });
+    
+    // Fermer les modales en cliquant à l'extérieur
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('modal')) {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+        }
+    });
 }
 
-// Render catalog cards
-function renderCatalog(){
-  const q = searchEl.value.trim().toLowerCase();
-  const chosenCat = categoryFilter.value;
-  catalogEl.innerHTML = "";
+// Initialiser les données utilisateur
+function initUserData() {
+    // Initialiser les bookmarks s'ils n'existent pas
+    mangaAnimeData.forEach(item => {
+        if (!bookmarks[item.id]) {
+            bookmarks[item.id] = item.type === 'anime' 
+                ? { episode: 1, season: 1 } 
+                : { chapter: 1, volume: 1 };
+        }
+    });
+    saveBookmarks();
+}
 
-  const list = data.filter(item => {
-    if (showMarkedOnly && !marks[item.id]) return false;
-    if (chosenCat && !item.categories.includes(chosenCat)) return false;
-    if (!q) return true;
-    return (item.title + " " + item.description + " " + item.categories.join(" ")).toLowerCase().includes(q);
-  });
+// Gérer le filtre de navigation (tous, animes, mangas)
+function handleNavFilter(filter) {
+    currentFilter = filter;
+    applyFilters();
+}
 
-  if (list.length === 0){
-    catalogEl.innerHTML = `<div class="empty" style="padding:40px;color:var(--muted)">Aucun résultat</div>`;
-    return;
-  }
+// Gérer le filtre par catégorie
+function handleCategoryFilter(category) {
+    currentCategory = category;
+    applyFilters();
+}
 
-  list.forEach(item => {
-    const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = `
-      <div class="poster" style="background-image:url('${item.poster}')">
-        <div class="badges">
-          <span class="badge">${item.type}</span>
-          <span class="badge">${item.categories[0] || ""}</span>
+// Appliquer tous les filtres
+function applyFilters() {
+    let result = mangaAnimeData;
+    
+    // Filtrer par type (anime/manga)
+    if (currentFilter !== 'all') {
+        result = result.filter(item => item.type === currentFilter);
+    }
+    
+    // Filtrer par catégorie
+    if (currentCategory !== 'all') {
+        result = result.filter(item => item.categories.includes(currentCategory));
+    }
+    
+    // Appliquer la recherche
+    if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        result = result.filter(item => 
+            item.title.toLowerCase().includes(query) || 
+            item.description.toLowerCase().includes(query) ||
+            item.categories.some(cat => cat.toLowerCase().includes(query))
+        );
+    }
+    
+    filteredData = result;
+    
+    // Mettre à jour le titre
+    updateContentTitle();
+    
+    // Afficher les résultats
+    renderItems(result);
+}
+
+// Effectuer une recherche
+function performSearch() {
+    searchQuery = document.getElementById('search-input').value.trim();
+    applyFilters();
+}
+
+// Afficher les favoris
+function showFavorites() {
+    const favoritesData = mangaAnimeData.filter(item => favorites.includes(item.id));
+    filteredData = favoritesData;
+    
+    // Mettre à jour le titre
+    document.getElementById('content-title').textContent = 'Vos favoris';
+    
+    // Afficher les favoris
+    renderItems(favoritesData);
+    
+    // Mettre à jour la navigation active
+    document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+}
+
+// Afficher les marque-pages
+function showBookmarks() {
+    const bookmarkedIds = Object.keys(bookmarks).map(id => parseInt(id));
+    const bookmarkedData = mangaAnimeData.filter(item => bookmarkedIds.includes(item.id));
+    filteredData = bookmarkedData;
+    
+    // Mettre à jour le titre
+    document.getElementById('content-title').textContent = 'Vos marque-pages';
+    
+    // Afficher les marque-pages
+    renderItems(bookmarkedData);
+    
+    // Mettre à jour la navigation active
+    document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+        link.classList.remove('active');
+    });
+}
+
+// Mettre à jour le titre du contenu
+function updateContentTitle() {
+    const titleElement = document.getElementById('content-title');
+    let title = '';
+    
+    if (currentFilter === 'all' && currentCategory === 'all' && !searchQuery) {
+        title = 'Tous les mangas et animes';
+    } else if (currentFilter !== 'all' && currentCategory === 'all') {
+        title = currentFilter === 'anime' ? 'Tous les animes' : 'Tous les mangas';
+    } else if (currentCategory !== 'all' && currentFilter === 'all') {
+        title = `Catégorie: ${currentCategory}`;
+    } else if (currentFilter !== 'all' && currentCategory !== 'all') {
+        title = `${currentFilter === 'anime' ? 'Animes' : 'Mangas'} - Catégorie: ${currentCategory}`;
+    }
+    
+    if (searchQuery) {
+        title = `Résultats pour "${searchQuery}"`;
+    }
+    
+    titleElement.textContent = title;
+}
+
+// Rendre les éléments (cartes) dans la grille
+function renderItems(items) {
+    const itemsGrid = document.getElementById('items-grid');
+    
+    if (items.length === 0) {
+        itemsGrid.innerHTML = `
+            <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>Aucun résultat trouvé</h3>
+                <p>Essayez de modifier vos filtres ou votre recherche</p>
+            </div>
+        `;
+        return;
+    }
+    
+    itemsGrid.innerHTML = items.map(item => createItemCard(item)).join('');
+    
+    // Ajouter les événements aux cartes
+    document.querySelectorAll('.item-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const itemId = parseInt(this.getAttribute('data-id'));
+            openItemModal(itemId);
+        });
+    });
+    
+    // Ajouter les événements aux boutons d'action
+    document.querySelectorAll('.favorite-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const itemId = parseInt(this.getAttribute('data-id'));
+            toggleFavorite(itemId);
+        });
+    });
+    
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const itemId = parseInt(this.getAttribute('data-id'));
+            openBookmarkModal(itemId);
+        });
+    });
+}
+
+// Créer une carte d'élément
+function createItemCard(item) {
+    const isFavorite = favorites.includes(item.id);
+    const bookmarkData = bookmarks[item.id] || {};
+    
+    return `
+        <div class="item-card" data-id="${item.id}">
+            <img src="${item.poster}" alt="${item.title}" class="item-image">
+            <div class="item-content">
+                <h3 class="item-title">${item.title}</h3>
+                <span class="item-category">${item.category}</span>
+                <p class="item-description">${item.description}</p>
+                <div class="item-footer">
+                    <span class="item-type">${item.type === 'anime' ? 'Anime' : 'Manga'}</span>
+                    <div class="item-actions">
+                        <button class="action-btn favorite-btn ${isFavorite ? 'active' : ''}" data-id="${item.id}" title="${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        <button class="action-btn bookmark-btn ${bookmarkData ? 'active' : ''}" data-id="${item.id}" title="Marquer la progression">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="card-body">
-        <div class="title">
-          <h3>${item.title}</h3>
-          <div style="text-align:right">
-            <div class="meta">${item.categories.join(" • ")}</div>
-            <div class="meta" style="font-size:12px">${marks[item.id] ? "Dernier: "+marks[item.id].last : ""}</div>
-          </div>
-        </div>
-        <p class="desc">${item.description}</p>
-        <div class="actions">
-          <button class="btn" data-id="${item.id}" data-action="open">Détails</button>
-          <button class="btn" data-id="${item.id}" data-action="fav">${favs.has(item.id) ? "♥ Favori" : "♡ Favori"}</button>
-          <button class="btn primary" data-id="${item.id}" data-action="mark">${marks[item.id] ? "Modifier marq." : "Marquer progrès"}</button>
-        </div>
-      </div>
     `;
-    catalogEl.appendChild(card);
-  });
 }
 
-// Toggle favorite and save
-function toggleFav(id){
-  if (favs.has(id)) favs.delete(id);
-  else favs.add(id);
-  localStorage.setItem(LS_FAV, JSON.stringify(Array.from(favs)));
-  renderCatalog();
-}
-
-// Open detail modal
-function openDetail(id){
-  const item = data.find(d => d.id === id);
-  if (!item) return;
-  modal.setAttribute("aria-hidden", "false");
-
-  const last = marks[id] ? marks[id].last : "";
-
-  detailBody.innerHTML = `
-    <div class="detail-grid">
-      <div>
-        <div class="detail-poster" style="background-image:url('${item.poster}')"></div>
-        <div style="margin-top:12px;">
-          <div class="meta">Plateformes:</div>
-          <div class="platforms">${item.platforms.map(p => platformHTML(p)).join("")}</div>
+// Ouvrir le modal d'un élément
+function openItemModal(itemId) {
+    const item = mangaAnimeData.find(i => i.id === itemId);
+    if (!item) return;
+    
+    const modalBody = document.getElementById('modal-body');
+    const isFavorite = favorites.includes(item.id);
+    const bookmarkData = bookmarks[item.id] || {};
+    
+    // Générer le HTML des plateformes
+    const platformsHTML = item.platforms.map(platform => `
+        <a href="${platform.url}" target="_blank" class="platform">
+            <i class="${platform.icon}"></i>
+            <span>${platform.name}</span>
+        </a>
+    `).join('');
+    
+    // Générer le HTML de progression
+    let progressHTML = '';
+    if (item.type === 'anime') {
+        progressHTML = `
+            <div class="progress-section">
+                <h3>Votre progression</h3>
+                <p>Vous êtes à l'épisode ${bookmarkData.episode || 1} de la saison ${bookmarkData.season || 1}</p>
+                <div class="progress-controls">
+                    <input type="number" id="episode-input" class="progress-input" min="1" max="${item.progress.totalEpisodes || 100}" value="${bookmarkData.episode || 1}">
+                    <span>Épisode</span>
+                    <input type="number" id="season-input" class="progress-input" min="1" max="10" value="${bookmarkData.season || 1}">
+                    <span>Saison</span>
+                    <button class="progress-btn" id="save-progress-btn" data-id="${item.id}">Sauvegarder</button>
+                </div>
+            </div>
+        `;
+    } else {
+        progressHTML = `
+            <div class="progress-section">
+                <h3>Votre progression</h3>
+                <p>Vous êtes au chapitre ${bookmarkData.chapter || 1}, volume ${bookmarkData.volume || 1}</p>
+                <div class="progress-controls">
+                    <input type="number" id="chapter-input" class="progress-input" min="1" max="${item.progress.totalChapters || 1000}" value="${bookmarkData.chapter || 1}">
+                    <span>Chapitre</span>
+                    <input type="number" id="volume-input" class="progress-input" min="1" max="${item.progress.volume || 100}" value="${bookmarkData.volume || 1}">
+                    <span>Volume</span>
+                    <button class="progress-btn" id="save-progress-btn" data-id="${item.id}">Sauvegarder</button>
+                </div>
+            </div>
+        `;
+    }
+    
+    modalBody.innerHTML = `
+        <div class="modal-header">
+            <img src="${item.poster}" alt="${item.title}" class="modal-poster">
+            <div class="modal-info">
+                <h2 class="modal-title">${item.title}</h2>
+                <div class="modal-meta">
+                    <span class="modal-category">${item.category}</span>
+                    <span class="modal-type">${item.type === 'anime' ? 'Anime' : 'Manga'}</span>
+                    <span class="modal-rating"><i class="fas fa-star"></i> ${item.rating}/5</span>
+                </div>
+                <p class="modal-description">${item.description}</p>
+                <div class="item-actions">
+                    <button class="action-btn favorite-btn ${isFavorite ? 'active' : ''}" data-id="${item.id}" title="${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                        <i class="fas fa-heart"></i> ${isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                    </button>
+                    <button class="action-btn bookmark-btn ${bookmarkData ? 'active' : ''}" data-id="${item.id}" title="Marquer la progression">
+                        <i class="fas fa-bookmark"></i> Marquer la progression
+                    </button>
+                </div>
+            </div>
         </div>
-      </div>
-      <div>
-        <h2>${item.title}</h2>
-        <div class="meta">${item.categories.join(" • ")}</div>
-        <p style="margin-top:12px">${item.description}</p>
-        ${item.trailer ? `<div style="margin-top:12px"><iframe width="100%" height="250" src="${item.trailer}" frameborder="0" allowfullscreen></iframe></div>` : ""}
-        <div class="progress">
-          <label style="min-width:90px">Dernier épisode / saison :</label>
-          <input id="lastInput" placeholder="ex: S1E4 ou Ep.12" value="${last}" />
-          <button id="saveMarkBtn" class="btn primary">Enregistrer</button>
-          <button id="clearMarkBtn" class="btn">Supprimer</button>
+        
+        <div class="modal-section">
+            <h3>Où regarder/lire</h3>
+            <div class="platforms">
+                ${platformsHTML}
+            </div>
         </div>
-      </div>
-    </div>
-  `;
-
-  // Attach events inside modal
-  document.getElementById("saveMarkBtn").addEventListener("click", () => {
-    const val = document.getElementById("lastInput").value.trim();
-    if (!val) return alert("Entrez un épisode ou saison (ex: S1E4).");
-    marks[id] = { last: val, date: new Date().toISOString() };
-    localStorage.setItem(LS_MARK, JSON.stringify(marks));
-    renderCatalog();
-    modal.setAttribute("aria-hidden", "true");
-  });
-
-  document.getElementById("clearMarkBtn").addEventListener("click", () => {
-    delete marks[id];
-    localStorage.setItem(LS_MARK, JSON.stringify(marks));
-    renderCatalog();
-    modal.setAttribute("aria-hidden", "true");
-  });
+        
+        ${progressHTML}
+    `;
+    
+    // Ouvrir le modal
+    document.getElementById('item-modal').style.display = 'block';
+    
+    // Ajouter les événements dans le modal
+    document.querySelector('.modal .favorite-btn').addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        toggleFavorite(itemId);
+        
+        // Mettre à jour l'état du bouton dans le modal
+        const isNowFavorite = favorites.includes(itemId);
+        this.classList.toggle('active', isNowFavorite);
+        this.innerHTML = `<i class="fas fa-heart"></i> ${isNowFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}`;
+        
+        // Mettre à jour l'état du bouton dans la grille
+        const gridBtn = document.querySelector(`.item-card[data-id="${itemId}"] .favorite-btn`);
+        if (gridBtn) {
+            gridBtn.classList.toggle('active', isNowFavorite);
+        }
+    });
+    
+    document.querySelector('.modal .bookmark-btn').addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        openBookmarkModal(itemId);
+    });
+    
+    document.getElementById('save-progress-btn').addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        saveProgress(itemId);
+    });
 }
 
-// HTML for platform icons (simple inline SVGs)
-function platformHTML(p){
-  const icons = {
-    stream: `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="14" x="2" y="5" rx="2" stroke="currentColor"/></svg>`,
-    book: `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19.5V5a2 2 0 012-2h11" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 19.5a2 2 0 00-2-2H6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-    store: `<svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9l1-2h16l1 2" stroke="currentColor"/><path d="M21 9v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9" stroke="currentColor"/></svg>`
-  };
-  const ic = icons[p.icon] || icons.book;
-  return `<a class="platform" href="${p.url}" target="_blank" rel="noopener noreferrer">${ic}<span>${p.name}</span></a>`;
+// Ouvrir le modal de marque-page
+function openBookmarkModal(itemId) {
+    const item = mangaAnimeData.find(i => i.id === itemId);
+    if (!item) return;
+    
+    const actionsModalBody = document.getElementById('actions-modal-body');
+    const bookmarkData = bookmarks[item.id] || {};
+    
+    let content = '';
+    if (item.type === 'anime') {
+        content = `
+            <h3>Marquer la progression - ${item.title}</h3>
+            <div class="progress-controls">
+                <label for="modal-episode-input">Épisode:</label>
+                <input type="number" id="modal-episode-input" class="progress-input" min="1" max="${item.progress.totalEpisodes || 100}" value="${bookmarkData.episode || 1}">
+                
+                <label for="modal-season-input">Saison:</label>
+                <input type="number" id="modal-season-input" class="progress-input" min="1" max="10" value="${bookmarkData.season || 1}">
+                
+                <button class="progress-btn" id="modal-save-progress-btn" data-id="${item.id}">Sauvegarder</button>
+            </div>
+        `;
+    } else {
+        content = `
+            <h3>Marquer la progression - ${item.title}</h3>
+            <div class="progress-controls">
+                <label for="modal-chapter-input">Chapitre:</label>
+                <input type="number" id="modal-chapter-input" class="progress-input" min="1" max="${item.progress.totalChapters || 1000}" value="${bookmarkData.chapter || 1}">
+                
+                <label for="modal-volume-input">Volume:</label>
+                <input type="number" id="modal-volume-input" class="progress-input" min="1" max="${item.progress.volume || 100}" value="${bookmarkData.volume || 1}">
+                
+                <button class="progress-btn" id="modal-save-progress-btn" data-id="${item.id}">Sauvegarder</button>
+            </div>
+        `;
+    }
+    
+    actionsModalBody.innerHTML = content;
+    
+    // Ouvrir le modal
+    document.getElementById('actions-modal').style.display = 'block';
+    
+    // Ajouter l'événement au bouton de sauvegarde
+    document.getElementById('modal-save-progress-btn').addEventListener('click', function() {
+        const itemId = parseInt(this.getAttribute('data-id'));
+        saveProgress(itemId, true);
+    });
 }
 
-// Setup events
-document.addEventListener("click", (e) => {
-  const actionBtn = e.target.closest("[data-action]");
-  if (actionBtn){
-    const id = actionBtn.dataset.id;
-    const action = actionBtn.dataset.action;
-    if (action === "fav") toggleFav(id);
-    if (action === "open") openDetail(id);
-    if (action === "mark") openDetail(id);
-  }
-});
+// Basculer un favori
+function toggleFavorite(itemId) {
+    const index = favorites.indexOf(itemId);
+    
+    if (index === -1) {
+        favorites.push(itemId);
+    } else {
+        favorites.splice(index, 1);
+    }
+    
+    saveFavorites();
+    
+    // Mettre à jour l'affichage si on est dans la vue des favoris
+    if (document.getElementById('content-title').textContent === 'Vos favoris') {
+        showFavorites();
+    }
+}
 
-searchEl.addEventListener("input", renderCatalog);
-categoryFilter.addEventListener("change", renderCatalog);
+// Sauvegarder la progression
+function saveProgress(itemId, fromMiniModal = false) {
+    const item = mangaAnimeData.find(i => i.id === itemId);
+    if (!item) return;
+    
+    if (item.type === 'anime') {
+        let episode, season;
+        
+        if (fromMiniModal) {
+            episode = parseInt(document.getElementById('modal-episode-input').value);
+            season = parseInt(document.getElementById('modal-season-input').value);
+        } else {
+            episode = parseInt(document.getElementById('episode-input').value);
+            season = parseInt(document.getElementById('season-input').value);
+        }
+        
+        bookmarks[itemId] = { episode, season };
+    } else {
+        let chapter, volume;
+        
+        if (fromMiniModal) {
+            chapter = parseInt(document.getElementById('modal-chapter-input').value);
+            volume = parseInt(document.getElementById('modal-volume-input').value);
+        } else {
+            chapter = parseInt(document.getElementById('chapter-input').value);
+            volume = parseInt(document.getElementById('volume-input').value);
+        }
+        
+        bookmarks[itemId] = { chapter, volume };
+    }
+    
+    saveBookmarks();
+    
+    // Fermer le modal des actions s'il est ouvert
+    if (fromMiniModal) {
+        document.getElementById('actions-modal').style.display = 'none';
+    }
+    
+    // Mettre à jour l'état des boutons de marque-page
+    const bookmarkBtns = document.querySelectorAll(`.bookmark-btn[data-id="${itemId}"]`);
+    bookmarkBtns.forEach(btn => {
+        btn.classList.add('active');
+    });
+    
+    // Actualiser l'affichage si on est dans la vue des marque-pages
+    if (document.getElementById('content-title').textContent === 'Vos marque-pages') {
+        showBookmarks();
+    }
+}
 
-markedOnlyBtn.addEventListener("click", () => {
-  showMarkedOnly = !showMarkedOnly;
-  markedOnlyBtn.classList.toggle("active", showMarkedOnly);
-  markedOnlyBtn.textContent = showMarkedOnly ? "Marqués uniquement" : "Voir marqués";
-  renderCatalog();
-});
+// Sauvegarder les favoris dans le localStorage
+function saveFavorites() {
+    localStorage.setItem('mangaAnimeFavorites', JSON.stringify(favorites));
+}
 
-// close modal
-closeModal.addEventListener("click", () => modal.setAttribute("aria-hidden","true"));
-modal.addEventListener("click", (ev) => {
-  if (ev.target === modal) modal.setAttribute("aria-hidden","true");
-});
+// Sauvegarder les marque-pages dans le localStorage
+function saveBookmarks() {
+    localStorage.setItem('mangaAnimeBookmarks', JSON.stringify(bookmarks));
+}
 
-// init
-initCategories();
-renderCatalog();
+// Ajout de styles pour les résultats vides
+const style = document.createElement('style');
+style.textContent = `
+    .no-results {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: #aaa;
+    }
+    
+    .no-results i {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        color: var(--primary-color);
+    }
+    
+    .no-results h3 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: white;
+    }
+    
+    .no-results p {
+        font-size: 1.1rem;
+    }
+`;
+document.head.appendChild(style);
