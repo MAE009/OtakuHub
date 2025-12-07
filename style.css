@@ -629,3 +629,325 @@ h1, h2, h3, h4 {
         padding: 20px;
     }
 }
+
+
+
+/*New fonctionnalité*/
+/* Améliorations pour petits écrans */
+@media (max-width: 768px) {
+    /* Réduire la taille des images des cartes */
+    .item-image {
+        height: 250px;
+    }
+    
+    .item-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    /* Réduire la taille des modales */
+    .modal-content {
+        margin: 10px;
+        width: calc(100% - 20px);
+    }
+    
+    .modal-poster {
+        width: 150px;
+        height: 220px;
+    }
+    
+    /* Optimiser l'affichage des contrôles de progression */
+    .progress-controls {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .progress-controls input {
+        width: 100%;
+        max-width: 100px;
+    }
+    
+    /* Améliorer l'affichage des plateformes */
+    .platforms {
+        flex-direction: column;
+    }
+    
+    .platform {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    /* Optimiser les filtres */
+    .filter-buttons {
+        gap: 5px;
+    }
+    
+    .filter-btn {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+    
+    /* Améliorer la navigation */
+    .nav-container {
+        flex-wrap: nowrap;
+    }
+    
+    .logo h1 {
+        font-size: 1.3rem;
+    }
+    
+    .search-bar {
+        margin-top: 0;
+        order: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Réduire encore plus pour très petits écrans */
+    .item-image {
+        height: 200px;
+    }
+    
+    .item-content {
+        padding: 15px;
+    }
+    
+    .item-title {
+        font-size: 1.2rem;
+    }
+    
+    .item-description {
+        -webkit-line-clamp: 2;
+    }
+    
+    /* Modale encore plus compacte */
+    .modal-body {
+        padding: 15px;
+    }
+    
+    .modal-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .modal-poster {
+        width: 100%;
+        max-width: 200px;
+        height: 280px;
+        margin: 0 auto;
+    }
+    
+    .modal-title {
+        font-size: 1.6rem;
+    }
+    
+    /* Contrôles de progression en colonne */
+    .progress-controls {
+        flex-direction: column;
+    }
+    
+    .progress-controls > * {
+        margin-bottom: 10px;
+    }
+    
+    /* Navigation mobile optimisée */
+    .nav-container {
+        padding: 0 10px;
+    }
+    
+    .logo {
+        font-size: 1.2rem;
+    }
+    
+    .logo i {
+        font-size: 1.5rem;
+    }
+    
+    /* Améliorer les filtres sur mobile */
+    .filters-container {
+        margin: 10px;
+        padding: 15px 10px;
+    }
+    
+    .filters h3 {
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+    }
+    
+    .filter-buttons {
+        justify-content: center;
+    }
+    
+    /* Footer optimisé */
+    .footer-links {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .footer p {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 400px) {
+    /* Pour les très petits smartphones */
+    .items-grid {
+        gap: 15px;
+    }
+    
+    .item-image {
+        height: 180px;
+    }
+    
+    .item-title {
+        font-size: 1.1rem;
+    }
+    
+    .item-description {
+        font-size: 0.85rem;
+    }
+    
+    .modal-title {
+        font-size: 1.4rem;
+    }
+    
+    .modal-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .modal-category, .modal-type, .modal-rating {
+        font-size: 0.8rem;
+        padding: 4px 10px;
+    }
+    
+    .logo h1 {
+        font-size: 1.1rem;
+    }
+    
+    #content-title {
+        font-size: 1.6rem;
+    }
+    
+    .container {
+        padding: 0 10px;
+    }
+}
+
+/* Améliorations spécifiques pour le modal d'actions */
+.mini-modal .modal-content {
+    margin: 20px auto;
+    width: 90%;
+    max-width: 350px;
+}
+
+@media (max-width: 400px) {
+    .mini-modal .modal-content {
+        width: 95%;
+        max-width: 300px;
+    }
+    
+    .mini-modal .modal-body {
+        padding: 20px 15px;
+    }
+    
+    .mini-modal h3 {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+    }
+}
+
+/* Améliorer l'affichage du texte dans les modales sur mobile */
+@media (max-width: 768px) {
+    .modal-description {
+        font-size: 1rem;
+        line-height: 1.5;
+    }
+    
+    .modal-section h3 {
+        font-size: 1.2rem;
+    }
+}
+
+/* Optimiser l'affichage des boutons d'action */
+@media (max-width: 576px) {
+    .item-actions {
+        gap: 8px;
+    }
+    
+    .action-btn {
+        font-size: 1rem;
+    }
+    
+    .modal .item-actions {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+    
+    .modal .action-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 10px;
+    }
+        }
+
+
+/* Optimisation des images pour mobile */
+.mobile-optimized {
+    object-position: center top;
+}
+
+/* Réduire la qualité des images en arrière-plan sur mobile */
+@media (max-width: 768px) {
+    body {
+        background-size: 150px 150px;
+    }
+}
+
+/* Ajustements pour les très petites hauteurs d'écran */
+@media (max-height: 600px) {
+    .modal-content {
+        margin: 5px auto;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-poster {
+        height: 180px;
+    }
+    
+    .modal-body {
+        padding: 15px;
+    }
+}
+
+/* Assurer que les modales ne dépassent pas la hauteur de l'écran */
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+    .modal-content {
+        max-height: 95vh;
+    }
+    }
+
+/* Améliorer le bouton de fermeture sur mobile */
+@media (max-width: 768px) {
+    .close-modal {
+        top: 10px;
+        right: 15px;
+        font-size: 1.8rem;
+        background-color: rgba(0, 0, 0, 0.5);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+            }
