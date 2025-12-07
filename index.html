@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MangaVerse - Votre bibliothèque de mangas et animes</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-dragon"></i>
+                <h1>MangaVerse</h1>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Rechercher un manga ou anime...">
+                <button id="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link active" data-filter="all"><i class="fas fa-home"></i> Accueil</a>
+                <a href="#" class="nav-link" data-filter="anime"><i class="fas fa-tv"></i> Animes</a>
+                <a href="#" class="nav-link" data-filter="manga"><i class="fas fa-book"></i> Mangas</a>
+                <a href="#" class="nav-link" id="favorites-btn"><i class="fas fa-heart"></i> Favoris</a>
+                <a href="#" class="nav-link" id="bookmarks-btn"><i class="fas fa-bookmark"></i> Marque-pages</a>
+            </div>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-links">
+            <a href="#" class="mobile-nav-link active" data-filter="all"><i class="fas fa-home"></i> Accueil</a>
+            <a href="#" class="mobile-nav-link" data-filter="anime"><i class="fas fa-tv"></i> Animes</a>
+            <a href="#" class="mobile-nav-link" data-filter="manga"><i class="fas fa-book"></i> Mangas</a>
+            <a href="#" class="mobile-nav-link" id="mobile-favorites-btn"><i class="fas fa-heart"></i> Favoris</a>
+            <a href="#" class="mobile-nav-link" id="mobile-bookmarks-btn"><i class="fas fa-bookmark"></i> Marque-pages</a>
+        </div>
+    </div>
+
+    <!-- Filtres par catégorie -->
+    <div class="filters-container">
+        <div class="filters">
+            <h3>Catégories</h3>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-category="all">Tous</button>
+                <button class="filter-btn" data-category="action">Action</button>
+                <button class="filter-btn" data-category="aventure">Aventure</button>
+                <button class="filter-btn" data-category="fantasy">Fantasy</button>
+                <button class="filter-btn" data-category="comedie">Comédie</button>
+                <button class="filter-btn" data-category="drame">Drame</button>
+                <button class="filter-btn" data-category="romance">Romance</button>
+                <button class="filter-btn" data-category="science-fiction">Science-fiction</button>
+                <button class="filter-btn" data-category="horreur">Horreur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <main class="main-content">
+        <div class="container">
+            <h2 id="content-title">Tous les mangas et animes</h2>
+            <div class="items-grid" id="items-grid">
+                <!-- Les cartes de mangas/animes seront générées ici par JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal pour afficher les détails -->
+    <div class="modal" id="item-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body" id="modal-body">
+                <!-- Le contenu du modal sera généré ici par JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal pour ajouter/supprimer des favoris et marque-pages -->
+    <div class="modal mini-modal" id="actions-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-body" id="actions-modal-body">
+                <!-- Le contenu du modal sera généré ici par JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-dragon"></i>
+                <h3>MangaVerse</h3>
+            </div>
+            <p>Votre bibliothèque personnelle pour suivre vos mangas et animes préférés</p>
+            <div class="footer-links">
+                <a href="#">À propos</a>
+                <a href="#">Contact</a>
+                <a href="#">Mentions légales</a>
+                <a href="#">Politique de confidentialité</a>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2023 MangaVerse - Tous droits réservés
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
