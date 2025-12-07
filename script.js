@@ -565,3 +565,76 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+
+
+//New fonctionnalité 
+// Optimiser les images pour mobile
+function optimizeImagesForMobile() {
+    // Vérifier si on est sur un écran mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    // Sélectionner toutes les images des cartes
+    const itemImages = document.querySelectorAll('.item-image');
+    
+    // Changer la source des images si nécessaire (simulation)
+    // Dans un vrai projet, vous auriez différentes tailles d'images
+    itemImages.forEach(img => {
+        if (isMobile) {
+            // Ajouter une classe pour le style mobile
+            img.classList.add('mobile-optimized');
+            
+            // Pour un site réel, vous pourriez charger une image plus petite :
+            // const originalSrc = img.src;
+            // const mobileSrc = originalSrc.replace('.jpg', '-mobile.jpg');
+            // img.src = mobileSrc;
+        } else {
+            img.classList.remove('mobile-optimized');
+        }
+    });
+}
+
+// Ajouter un événement de redimensionnement
+window.addEventListener('resize', optimizeImagesForMobile);
+
+// Appeler la fonction au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    // ... code existant ...
+    
+    // Optimiser les images pour le dispositif actuel
+    optimizeImagesForMobile();
+    
+    // ... reste du code existant ...
+});
+
+// Améliorer le menu mobile
+function initMobileMenu() {
+    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+    const mobileNav = document.querySelector('.mobile-nav');
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+    
+    mobileMenuBtn.addEventListener('click', function() {
+        mobileNav.style.display = mobileNav.style.display === 'block' ? 'none' : 'block';
+    });
+    
+    // Fermer le menu quand on clique sur un lien
+    mobileNavLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            mobileNav.style.display = 'none';
+        });
+    });
+    
+    // Fermer le menu quand on clique en dehors
+    document.addEventListener('click', function(e) {
+        if (!mobileMenuBtn.contains(e.target) && !mobileNav.contains(e.target)) {
+            mobileNav.style.display = 'none';
+        }
+    });
+}
+
+// Appeler cette fonction dans votre initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // ... code existant ...
+    initMobileMenu();
+    // ... reste du code ...
+});
