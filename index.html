@@ -1,1 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OtakuLib - Manga & Animé</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Titre style manga + lisibilité -->
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;600;700&family=Noto+Sans+JP:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">OT</div>
+      <div class="title">
+        <h1>OtakuLib</h1>
+        <span class="subtitle">Manga & Animé Explorer</span>
+      </div>
+    </div>
 
+    <div class="actions">
+      <div class="search-wrap">
+        <input id="searchInput" type="search" placeholder="Rechercher un titre, une catégorie..." aria-label="Rechercher" />
+      </div>
+      <button id="toggleFav" class="chip toggler" aria-pressed="false" title="Afficher uniquement les favoris">
+        <span class="icon">❤</span>
+        Favoris
+      </button>
+      <button id="toggleMarked" class="chip toggler" aria-pressed="false" title="Afficher uniquement les marqués">
+        <span class="icon">🔖</span>
+        Marqués
+      </button>
+    </div>
+  </header>
+
+  <nav class="category-bar" aria-label="Catégories">
+    <div id="categoryChips" class="chips-scroll">
+      <!-- Chips de catégories générés par JS -->
+    </div>
+  </nav>
+
+  <main class="content">
+    <section id="grid" class="grid" aria-live="polite">
+      <!-- Cartes générées par JS -->
+    </section>
+    <div id="noResults" class="no-results" hidden>
+      Aucun résultat. Modifiez la recherche ou les filtres.
+    </div>
+  </main>
+
+  <div id="progressModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="progressTitle" hidden>
+    <div class="modal-card">
+      <h2 id="progressTitle">Marquer la progression</h2>
+      <form id="progressForm">
+        <div class="form-row">
+          <label for="seasonInput">Saison</label>
+          <input id="seasonInput" type="number" min="1" step="1" required />
+        </div>
+        <div class="form-row">
+          <label for="episodeInput">Épisode</label>
+          <input id="episodeInput" type="number" min="1" step="1" required />
+        </div>
+        <div class="form-actions">
+          <button type="button" id="cancelProgress" class="btn ghost">Annuler</button>
+          <button type="submit" class="btn primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <small>© 2025 OtakuLib — Fait avec passion pour les mangas et animés.</small>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+    </html>
